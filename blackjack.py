@@ -4,10 +4,14 @@
 
 # Import needed librarys
 import random
+from turtle import ScrolledCanvas
+from typing import final
 
 # Function setting up the game
 # Dictionary containing all 52 cards
 def initial_setup():
+    global scores
+    scores = [0,0]
     global card_pool_dict
     card_pool_dict = {"hearts":[], "clubs":[], "diamonds":[], "spades":[]}
     global original_card_dict
@@ -128,15 +132,16 @@ def user_controls():
         if bust_check(hand_total(user_cards)) == True:
             print("\nStarting hand is bust!")
             user_control_loop = False
+            return True
         
         else:
-            print(bust_chance_calc(user_cards))
             user_command = input("\n\nHit, Stand?")
             if user_command.lower() == "hit":
                 hit(user_cards)
                 if bust_check(hand_total(user_cards)) == True:
                     print("\nYou are bust!")
                     user_control_loop = False
+                    return True
                 else:
                     user_control_loop = True
             
@@ -149,9 +154,21 @@ def user_controls():
 
 # Function defining the process that the computer will go through after the user has finished
 # their processes, the computer will display the cards in their hand regardless of whether 
-# the user has gone bust
+# the user has gone bust.
+# According to game rules the comp must stand if the total of their cards is greater than or 
+# equal to 17 and must draw until this point is reached. 
 def comp_controls():
-        pass
+    comp_control_loop = True
+    while comp_control_loop == True:
+        print(f"\n\n Computers cards are:")
+        for i in range(len(comp_cards)):
+            print (comp_cards[i][0], " of ", comp_cards[i][1])
+        if hand_total(comp_cards)[0] >= 17 or hand_total(comp_cards)[1] >= 17:
+            return True
+            comp_control_loop = False
+        else:
+            hit(comp_cards)
+
 
 # Function used to calculte the possibility of going bust based on the card left within the
 # card pool
@@ -176,21 +193,63 @@ def bust_chance_calc(hand_bust):
     for i in bust_chance_temp_pool:
         for h in range(len(bust_chance_temp_pool[i])):
             for g in range(len(bust_chance_temp_pool[i][h])):
-                for f in range(len(hand_total(hand_bust))):
-                    if bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[f] == 21:
-                        bust_chance[0] += 1
-                    elif bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[f] < 21:
-                        bust_chance[1] += 1
+                
+                if hand_total(hand_bust)[0] != hand_total(hand_bust):
+                    for f in range(len(hand_total(hand_bust))):
+                        if bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[f] == 21:
+                            bust_chance[0] += 1
+                        elif bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[f] < 21:
+                            bust_chance[1] += 1
+                        else:
+                            bust_chance[2] += 1
+                
+                else:
+                    if bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[0] == 21:
+                            bust_chance[0] += 1
+                    elif bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[0] < 21:
+                            bust_chance[1] += 1
                     else:
-                        bust_chance[2] += 1
+                            bust_chance[2] += 1
 
     for i in range(len(bust_chance)):
         bust_chance_disp.append(bust_chance[i] / sum(bust_chance))
     return bust_chance_disp
 
     
+# Func to assign scores based on who is closer to 21 and not bust, with the score being [user,comp]
+# The inputs will be the variables assigned to hands
+# Because all values of difference will be made positive to get the best comparison, hands that are considered bust
+# will be set to 21 on the differences variables to make for ease of comparing intergeers as oppoised to int and str
+def score_check(user_input, comp_input):
+    global scores
+    user_difference = []
+    comp_difference = []
+    final_compare = [0,0]
 
+    for i in [0,1]:
+        if hand_total(user_input)[i] > 21:
+            user_difference.append(21)
+        else:
+            user_difference.append(abs(21 - hand_total(user_input)[i]))
 
+        if hand_total(comp_input)[i] > 21:
+            comp_difference.append(21)
+        else:
+            comp_difference.append(abs(21 - hand_total(comp_input)[i]))
+
+    final_compare[0] = min(user_difference)
+    final_compare[1] = min(comp_difference)
+
+    if final_compare[0] > final_compare[1]:
+        scores[1] += 1
+    elif final_compare[0] < final_compare[1]:
+        scores[0] += 1
+    else:
+        scores[0] += 0
+        scores[1] += 0
+
+    print (f"User Score:    {scores[0]}")
+    print (f"Computer Score:    {scores[1]}")
 
 # Main Game Loop
 prog_loop = True
@@ -201,14 +260,15 @@ while prog_loop == True:
         game_loop_check = input("\n\nPlay Blackjack, yes or no?\n")
         if game_loop_check.lower() == "yes":
             if user_controls() == True:
-                print("placeholder")
+                if comp_controls() == True:
+                    score_check(user_cards, comp_cards)
         elif game_loop_check.lower() == "no":
             game_loop = False
             prog_loop = False
         else:
             print("\nPlease enter yes or no")
 
-    
+### Fix issues when having two aces doesnt account for the right number of possibilites    
 
 
 
