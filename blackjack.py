@@ -71,22 +71,12 @@ def starting_hands():
     random_card(comp_cards)
     random_card(comp_cards)
 
-
-    #print(f"\n\nYou starting hand is:\n{user_cards[0][0]} of {user_cards[0][1]} \n{user_cards[1][0]} of {user_cards[1][1]}")
-    #print(f"\nMax non-bust total:    {hand_total(user_cards, user_ace_count)}")
-
 # Function to draw a card and display cards in hand if it is the user
 def hit(hand_hit):
     global draw_count
     draw_count = 1
     random_card(hand_hit)
-    
-    #if hand_hit == user_cards:
-    #    print ("\n\nCards in hand:")
-    #    for i in range(len(hand_hit)):
-    #        print (user_cards[i][0], " of ", user_cards[i][1])
-    #    print(f"\nMax non-bust total:    {hand_total(hand_hit, user_ace_count)}")
-        
+       
 # Function to apply maths to cards in hand and convert str values to int values 
 # Gives a max total
 # Takes values in format [[number],[suit]] and converts this to [[number],[number]] to give totals
@@ -113,52 +103,6 @@ def hand_total(hand_hand_total, which_ace_count):
         temp_ace_count -= 1
 
     return hand_sum
-
-
-
-# Function to check if the cards in hand are bust
-# to be used in conjunction with hand_total so that input is given in format x
-def bust_check(bust_check_values):
-
-    if bust_check_values > 21 and bust_check_values > 21:
-        return True
-    else:
-        return False
-
-# Function for taking user commands during the part of the game where the player is 
-# actively playing
-# Also checks before playing that the users starting hand isnt bust.
-# Has 3 possible outcomes:
-# Hit - adds another card to hand and checks if bust
-# Stand - finishes drawing and moves to computers moves
-# Other possible inputs - return an error telling them to chose from one of the above
-def user_controls():
-    starting_hands()
-    user_control_loop = True
-    
-    while user_control_loop == True:
-        if bust_check(hand_total(user_cards, user_ace_count)) == True:
-            print("\nStarting hand is bust!")
-            user_control_loop = False
-            return True
-        
-        else:
-            user_command = input("\n\nHit, Stand?\n")
-            if user_command.lower() == "hit":
-                hit(user_cards)
-                if bust_check(hand_total(user_cards,user_ace_count)) == True:
-                    print("\nYou are bust!")
-                    user_control_loop = False
-                    return True
-                else:
-                    user_control_loop = True
-            
-            elif user_command.lower() == "stand":
-                user_control_loop = False
-                return True
-            
-            else:
-                print("\nPlease choose Hit or Stand!")
 
 # Function defining the process that the computer will go through after the user has finished
 # their processes, the computer will display the cards in their hand regardless of whether 
@@ -203,19 +147,13 @@ def score_check(user_input, comp_input):
     if user_difference > comp_difference:
         scores[1] += 1
         winner = "Computer Wins!"
-        #print("\nComputer wins!")
     elif user_difference < comp_difference:
         scores[0] += 1
         winner = "User Wins!"
-        #print("\nYou win!")
     else:
         scores[0] += 0
         scores[1] += 0
         winner = "Its a draw!"
-        #print("\nIts a draw!")
-
-    #print (f"User Score:    {scores[0]}")
-    #print (f"Computer Score:    {scores[1]}")
 
 # Function to create a displayable string with cards in hand
 def display_cards_in_hand(which_cards):
@@ -223,9 +161,6 @@ def display_cards_in_hand(which_cards):
     for i in range(len(which_cards)):
         display_string += str(f"\n{which_cards[i][0]} of {which_cards[i][1]}")
     return (f"Cards in hand:{display_string}")
-
-
-
 
 # Setting up main GUI
 def main():
@@ -350,25 +285,3 @@ def main():
     root.mainloop()
 
 main()
-
-
-# Main Game Loop
-#prog_loop = True
-#while prog_loop == True:
-#    initial_setup()
-#    scores = [0,0]
-#    game_loop = True
-#    while game_loop == True:
-#        time.sleep(3)
-#        os.system("cls")
-#        game_loop_check = input("\n\nPlay Blackjack, yes or no?\n")
-#        if game_loop_check.lower() == "yes":
-#            if user_controls() == True:
-#                if comp_controls() == True:
-#                    score_check(user_cards, comp_cards)
-#        elif game_loop_check.lower() == "no":
-#            game_loop = False
-#            prog_loop = False
-#        else:
-#            print("\nPlease enter yes or no")
-
