@@ -274,6 +274,7 @@ def main():
 
         blackjack_canvas.itemconfig(user_score_text, text = f"Score:    {scores[0]}")
         blackjack_canvas.itemconfig(comp_score_text, text = f"Score:    {scores[1]}")
+        blackjack_canvas.itemconfig(win_display_text, text = "")
 
     def create_restart_button():
         global restart_button
