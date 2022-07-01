@@ -4,19 +4,17 @@
 
 # Import needed librarys
 import random
-from turtle import ScrolledCanvas
-from typing import final
+import os
+import time
+import tkinter as tk
 
 # Function setting up the game
 # Dictionary containing all 52 cards
 def initial_setup():
-    global scores
-    scores = [0,0]
-    global card_pool_dict
-    card_pool_dict = {"hearts":[], "clubs":[], "diamonds":[], "spades":[]}
-    global original_card_dict
+    global card_pool_dict, original_card_dict
+    card_pool_dict = {"Hearts":[], "Clubs":[], "Diamonds":[], "Spades":[]}
     card_numbers = ["A",2,3,4,5,6,7,8,9,10,"J","Q","K"]
-    original_card_dict = {"hearts" : card_numbers, "clubs" : card_numbers, "diamonds" : card_numbers, "spades" : card_numbers}
+    original_card_dict = {"Hearts" : card_numbers, "Clubs" : card_numbers, "Diamonds" : card_numbers, "Spades" : card_numbers}
     
     for i in original_card_dict:
         for h in range(len(original_card_dict[i])):
@@ -26,11 +24,12 @@ def initial_setup():
 #  whilst checking that there is a pool to pull from
 # Cards are generated and kept in embedded lists in the following format:
 # [[[Number],[Suit]],[[Number],[Suit]]]
-def random_card():
-    global card_pool_dict
-    global original_card_dict
-    
-    if draw_count > (len(card_pool_dict["hearts"])  + len(card_pool_dict["clubs"]) + len(card_pool_dict["diamonds"]) + len(card_pool_dict["spades"])):
+# Function also checks if card is an Ace and adds one to the value of an aces count, which will be used later 
+# To reduce the total value of cards if it goes over 21
+def random_card(user_or_comp):
+    global card_pool_dict, original_card_dict, user_ace_count, comp_ace_count
+
+    if draw_count > (len(card_pool_dict["Hearts"])  + len(card_pool_dict["Clubs"]) + len(card_pool_dict["Diamonds"]) + len(card_pool_dict["Spades"])):
         initial_setup()
         for i in range(len(user_cards)):
             if user_cards[i][0] in card_pool_dict[(user_cards[i][1])]:
@@ -41,78 +40,87 @@ def random_card():
 
     random_card_loop = True
     while random_card_loop == True:
-        rand_suit_store = random.choice(["hearts", "clubs", "diamonds", "spades"])
+        rand_suit_store = random.choice(["Hearts", "Clubs", "Diamonds", "Spades"])
         if len(card_pool_dict[rand_suit_store]) != 0:
             rand_num_store = random.choice(card_pool_dict[rand_suit_store])
             rand_card_store = [rand_num_store, rand_suit_store]
             card_pool_dict[rand_suit_store].remove(rand_num_store)
             random_card_loop = False
-    return rand_card_store
+
+    user_or_comp.append(rand_card_store)
+
+    if user_or_comp == user_cards and rand_num_store == "A":
+        user_ace_count += 1
+    elif user_or_comp == comp_cards and rand_num_store == "A":
+        comp_ace_count += 1
+
+
 
 # Generate the starting hands using random_card()
 def starting_hands():
-    global user_cards ,  comp_cards, draw_count
+    global user_cards ,  comp_cards, draw_count, comp_ace_count, user_ace_count
     draw_count = 4
-    user_cards = [random_card(), random_card()]
-    comp_cards = [random_card(), random_card()]
+    user_cards = []
+    comp_cards = []
+    user_ace_count = 0
+    comp_ace_count = 0
 
-    print(f"\n\nYou starting hand is:\n{user_cards[0][0]} of {user_cards[0][1]} \n{user_cards[1][0]} of {user_cards[1][1]}")
-    hand_total(user_cards)
-    
-    if hand_sum[0] != hand_sum[1]:
-        print(f"\nTotals:    {hand_sum[0]} or {hand_sum[1]}")
-    else:
-        print(f"\nTotal:    {hand_sum[0]}")
+    random_card(user_cards)
+    random_card(user_cards)
 
-    
+    random_card(comp_cards)
+    random_card(comp_cards)
 
 
+    #print(f"\n\nYou starting hand is:\n{user_cards[0][0]} of {user_cards[0][1]} \n{user_cards[1][0]} of {user_cards[1][1]}")
+    #print(f"\nMax non-bust total:    {hand_total(user_cards, user_ace_count)}")
 
 # Function to draw a card and display cards in hand if it is the user
 def hit(hand_hit):
     global draw_count
     draw_count = 1
-    hand_hit.append(random_card())
+    random_card(hand_hit)
     
-    if hand_hit == user_cards:
-        print ("\n\nCards in hand:")
-        for i in range(len(hand_hit)):
-            print (user_cards[i][0], " of ", user_cards[i][1])
-        hand_total(hand_hit)
-        if hand_sum[0] != hand_sum[1]:
-            print(f"\nTotals:    {hand_sum[0]} or {hand_sum[1]}")
-        else:
-            print(f"\nTotal:    {hand_sum[0]}")
+    #if hand_hit == user_cards:
+    #    print ("\n\nCards in hand:")
+    #    for i in range(len(hand_hit)):
+    #        print (user_cards[i][0], " of ", user_cards[i][1])
+    #    print(f"\nMax non-bust total:    {hand_total(hand_hit, user_ace_count)}")
         
-
-    
-# Function to apply maths to cards in hand and convert str values to int values whilst keeping a list of 
-# two values to accound for aces having two values
+# Function to apply maths to cards in hand and convert str values to int values 
+# Gives a max total
 # Takes values in format [[number],[suit]] and converts this to [[number],[number]] to give totals
-def hand_total(hand_hand_total):
+# Checks if final sum is over 21 and takes away 10 for each ace until value is less than or equal to 21
+def hand_total(hand_hand_total, which_ace_count):
     global hand_sum
-    hand_sum = [0,0]
+    hand_sum = 0
     temp_hand =[]
+    temp_ace_count = which_ace_count
 
     for i in range(len(hand_hand_total)):
         if hand_hand_total[i][0] == "A":
-            temp_hand.append([1,11])            
+            temp_hand.append(11)            
         elif hand_hand_total[i][0] == "J" or hand_hand_total[i][0] == "Q" or hand_hand_total[i][0] == "K":
-            temp_hand.append([10,10])  
+            temp_hand.append(10)  
         else:
-            temp_hand.append([hand_hand_total[i][0],hand_hand_total[i][0]]) 
+            temp_hand.append(hand_hand_total[i][0]) 
             
-
     for i in range(len(temp_hand)):
-        for h in range(len(hand_sum)):
-            hand_sum[h] += temp_hand[i][h]
+            hand_sum += temp_hand[i]
+    
+    while hand_sum > 21 and temp_ace_count > 0:
+        hand_sum -= 10
+        temp_ace_count -= 1
 
     return hand_sum
 
+
+
 # Function to check if the cards in hand are bust
-# to be used in conjunction with hand_total so that input is given in format [x,y]
+# to be used in conjunction with hand_total so that input is given in format x
 def bust_check(bust_check_values):
-    if bust_check_values[0] > 21 and bust_check_values[1] > 21:
+
+    if bust_check_values > 21 and bust_check_values > 21:
         return True
     else:
         return False
@@ -129,16 +137,16 @@ def user_controls():
     user_control_loop = True
     
     while user_control_loop == True:
-        if bust_check(hand_total(user_cards)) == True:
+        if bust_check(hand_total(user_cards, user_ace_count)) == True:
             print("\nStarting hand is bust!")
             user_control_loop = False
             return True
         
         else:
-            user_command = input("\n\nHit, Stand?")
+            user_command = input("\n\nHit, Stand?\n")
             if user_command.lower() == "hit":
                 hit(user_cards)
-                if bust_check(hand_total(user_cards)) == True:
+                if bust_check(hand_total(user_cards,user_ace_count)) == True:
                     print("\nYou are bust!")
                     user_control_loop = False
                     return True
@@ -150,7 +158,7 @@ def user_controls():
                 return True
             
             else:
-                print("\nPlease choose Hit, Stand!")
+                print("\nPlease choose Hit or Stand!")
 
 # Function defining the process that the computer will go through after the user has finished
 # their processes, the computer will display the cards in their hand regardless of whether 
@@ -160,115 +168,119 @@ def user_controls():
 def comp_controls():
     comp_control_loop = True
     while comp_control_loop == True:
-        print(f"\n\n Computers cards are:")
+        print(f"\n\nComputers cards are:")
         for i in range(len(comp_cards)):
             print (comp_cards[i][0], " of ", comp_cards[i][1])
-        if hand_total(comp_cards)[0] >= 17 or hand_total(comp_cards)[1] >= 17:
+        if hand_total(comp_cards, comp_ace_count) >= 17 or hand_total(comp_cards, comp_ace_count) >= 17:
             return True
             comp_control_loop = False
         else:
             hit(comp_cards)
 
-
-# Function used to calculte the possibility of going bust based on the card left within the
-# card pool
-# Bust chance will be stored in variable bust_chance which is laid out as [x,y,z],
-# where x is the chance of getting 21 exact, y is chance of going under and z is chance of 
-# going over
-def bust_chance_calc(hand_bust):
-    global card_pool_dict
-    bust_chance = [0,0,0]
-    bust_chance_disp = []
-    bust_chance_temp_pool = {"hearts":[], "clubs":[], "diamonds":[], "spades":[]}
-
-    for i in card_pool_dict:
-        for h in range(len(card_pool_dict[i])):
-            if card_pool_dict[i][h] == "A":
-                bust_chance_temp_pool[i].append([1,11])
-            elif card_pool_dict[i][h] == "J" or card_pool_dict[i][h] == "Q" or card_pool_dict[i][h] == "K":
-                bust_chance_temp_pool[i].append([10,10])
-            else:
-                bust_chance_temp_pool[i].append([card_pool_dict[i][h], card_pool_dict[i][h]])
-
-    for i in bust_chance_temp_pool:
-        for h in range(len(bust_chance_temp_pool[i])):
-            for g in range(len(bust_chance_temp_pool[i][h])):
-                
-                if hand_total(hand_bust)[0] != hand_total(hand_bust):
-                    for f in range(len(hand_total(hand_bust))):
-                        if bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[f] == 21:
-                            bust_chance[0] += 1
-                        elif bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[f] < 21:
-                            bust_chance[1] += 1
-                        else:
-                            bust_chance[2] += 1
-                
-                else:
-                    if bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[0] == 21:
-                            bust_chance[0] += 1
-                    elif bust_chance_temp_pool[i][h][g] + hand_total(hand_bust)[0] < 21:
-                            bust_chance[1] += 1
-                    else:
-                            bust_chance[2] += 1
-
-    for i in range(len(bust_chance)):
-        bust_chance_disp.append(bust_chance[i] / sum(bust_chance))
-    return bust_chance_disp
-
-    
 # Func to assign scores based on who is closer to 21 and not bust, with the score being [user,comp]
 # The inputs will be the variables assigned to hands
 # Because all values of difference will be made positive to get the best comparison, hands that are considered bust
 # will be set to 21 on the differences variables to make for ease of comparing intergeers as oppoised to int and str
 def score_check(user_input, comp_input):
     global scores
-    user_difference = []
-    comp_difference = []
-    final_compare = [0,0]
 
-    for i in [0,1]:
-        if hand_total(user_input)[i] > 21:
-            user_difference.append(21)
-        else:
-            user_difference.append(abs(21 - hand_total(user_input)[i]))
+    if hand_total(user_input, user_ace_count) > 21:
+        user_difference = 21
+    else:
+        user_difference = 21 - hand_total(user_input, user_ace_count)
 
-        if hand_total(comp_input)[i] > 21:
-            comp_difference.append(21)
-        else:
-            comp_difference.append(abs(21 - hand_total(comp_input)[i]))
+    if hand_total(comp_input, comp_ace_count) > 21:
+        comp_difference = 21
+    else:
+        comp_difference = 21 - hand_total(comp_input, comp_ace_count)
 
-    final_compare[0] = min(user_difference)
-    final_compare[1] = min(comp_difference)
 
-    if final_compare[0] > final_compare[1]:
+    if user_difference > comp_difference:
         scores[1] += 1
-    elif final_compare[0] < final_compare[1]:
+        print("\nComputer wins!")
+    elif user_difference < comp_difference:
         scores[0] += 1
+        print("\nYou win!")
     else:
         scores[0] += 0
         scores[1] += 0
+        print("\nIts a draw!")
 
     print (f"User Score:    {scores[0]}")
     print (f"Computer Score:    {scores[1]}")
 
-# Main Game Loop
-prog_loop = True
-while prog_loop == True:
-    initial_setup()
-    game_loop = True
-    while game_loop == True:
-        game_loop_check = input("\n\nPlay Blackjack, yes or no?\n")
-        if game_loop_check.lower() == "yes":
-            if user_controls() == True:
-                if comp_controls() == True:
-                    score_check(user_cards, comp_cards)
-        elif game_loop_check.lower() == "no":
-            game_loop = False
-            prog_loop = False
-        else:
-            print("\nPlease enter yes or no")
+# Function to create a displayable string with cards in hand
+def display_cards_in_hand(which_cards):
+    display_string = ""    
+    for i in range(len(which_cards)):
+        display_string += str(f"\n{which_cards[i][0]} of {which_cards[i][1]}")
+    return (f"Cards in hand:{display_string}")
 
-### Fix issues when having two aces doesnt account for the right number of possibilites    
+initial_setup()
+starting_hands()
+
+
+# Setting up main GUI
+def main():
+    global root
+    root = tk.Tk()
+
+    # Setting static elements
+    global blackjack_canvas, user_hand_text
+    blackjack_canvas = tk.Canvas( width = 1000, height = 750, bg = "black")
+    title_text = blackjack_canvas.create_text(100, 50, text = "Blackjack", fill = "white", font = "Helvetica 25 bold", anchor = "w")
+    user_hand_title = blackjack_canvas.create_text(100, 100, text = "User", fill = "white", font = "Helvetica 15 bold", anchor = "w")
+    comp_hand_title = blackjack_canvas.create_text(600, 100, text = "Computer", fill = "white", font = "Helvetica 15 bold", anchor = "w")
+
+    user_hand_text = blackjack_canvas.create_text(100, 120, text = display_cards_in_hand(user_cards), fill = "white", font = "Helvetica 15 bold", anchor = "nw")
+    user_total_text = blackjack_canvas.create_text(100, 450, text = f"Total:    {hand_total(user_cards, user_ace_count)}", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
+    
+
+    # Function that instructs the hit button to hit and update cards in hand
+    def hit_button_func():
+        hit(user_cards)
+        blackjack_canvas.itemconfig(user_hand_text, text = display_cards_in_hand(user_cards))
+        blackjack_canvas.itemconfig(user_total_text, text = f"Total:    {hand_total(user_cards, user_ace_count)}")
+    
+    hit_button = tk.Button(root, text = "Hit")
+    hit_button["command"] = lambda : hit_button_func()
+    hit_button.pack()
+
+    blackjack_canvas.pack()
+    root.mainloop()
+
+main()
+
+
+# Main Game Loop
+#prog_loop = True
+#while prog_loop == True:
+#    initial_setup()
+#    scores = [0,0]
+#    game_loop = True
+#    while game_loop == True:
+#        time.sleep(3)
+#        os.system("cls")
+#        game_loop_check = input("\n\nPlay Blackjack, yes or no?\n")
+#        if game_loop_check.lower() == "yes":
+#            if user_controls() == True:
+#                if comp_controls() == True:
+#                    score_check(user_cards, comp_cards)
+#        elif game_loop_check.lower() == "no":
+#            game_loop = False
+#            prog_loop = False
+#        else:
+#            print("\nPlease enter yes or no")
+
+
+### Update UI so that it is closer to:
+### User cards in Hand:                          Computer cards in Hand:  
+### x                                            x (Hidden until revealed)
+### y                                            y  (Hidden until revealed)
+### z                                            z  (Hidden until revealed)
+### Total:                                       Total:
+###
+### Score:                                       Score:
 
 
 
