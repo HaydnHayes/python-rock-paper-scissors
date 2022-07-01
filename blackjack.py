@@ -7,6 +7,7 @@ import random
 import os
 import time
 import tkinter as tk
+from turtle import fillcolor
 
 # Function setting up the game
 # Dictionary containing all 52 cards
@@ -53,8 +54,6 @@ def random_card(user_or_comp):
         user_ace_count += 1
     elif user_or_comp == comp_cards and rand_num_store == "A":
         comp_ace_count += 1
-
-
 
 # Generate the starting hands using random_card()
 def starting_hands():
@@ -116,10 +115,8 @@ def comp_controls():
         if hand_total(comp_cards, comp_ace_count) <= 21:
             blackjack_canvas.itemconfig(comp_total_text, text = f"Max Non-Bust Total:   {hand_total(comp_cards, comp_ace_count)}")
         else:
-            blackjack_canvas.itemconfig(comp_total_text, text = f"Total:   {hand_total(comp_cards, comp_ace_count)}\n Computer is bust!")
-        #print(f"\n\nComputers cards are:")
-        #for i in range(len(comp_cards)):
-        #    print (comp_cards[i][0], " of ", comp_cards[i][1])
+            blackjack_canvas.itemconfig(comp_total_text, text = f"Total:   {hand_total(comp_cards, comp_ace_count)}\nComputer is bust!")
+
         if hand_total(comp_cards, comp_ace_count) >= 17 or hand_total(comp_cards, comp_ace_count) >= 17:
             return True
             comp_control_loop = False
@@ -166,9 +163,12 @@ def display_cards_in_hand(which_cards):
 def main():
     global root, blackjack_canvas
     root = tk.Tk()
+    root.title("Blackjack")
 
-    blackjack_canvas = tk.Canvas( width = 1000, height = 750, bg = "black")
-    title_text = blackjack_canvas.create_text(100, 50, text = "Blackjack", fill = "white", font = "Helvetica 25 bold", anchor = "w")
+    blackjack_canvas = tk.Canvas( width = 560, height = 702.5, bg = "black")
+    blackjack_canvas.create_rectangle(2.5,2.5,560,702.5, outline = "white",  width = 5)
+    title_text = blackjack_canvas.create_text(10, 5, text = "Blackjack", fill = "white", font = "Helvetica 50 bold", anchor = "nw")
+   
     
     # Function for button that sets static elements
     def start_button_func():
@@ -181,25 +181,26 @@ def main():
         starting_hands()
         scores = [0,0]
 
-        user_hand_title = blackjack_canvas.create_text(100, 100, text = "User", fill = "white", font = "Helvetica 15 bold", anchor = "w")
-        comp_hand_title = blackjack_canvas.create_text(600, 100, text = "Computer", fill = "white", font = "Helvetica 15 bold", anchor = "w")
+        user_hand_title = blackjack_canvas.create_text(10, 100, text = "User", fill = "white", font = "Helvetica 15 bold underline", anchor = "w")
+        comp_hand_title = blackjack_canvas.create_text(270, 100, text = "Computer", fill = "white", font = "Helvetica 15 bold underline", anchor = "w")
 
-        user_hand_text = blackjack_canvas.create_text(100, 120, text = display_cards_in_hand(user_cards), fill = "white", font = "Helvetica 15 bold", anchor = "nw")
-        user_total_text = blackjack_canvas.create_text(100, 450, text = f"Max Non-Bust Total:    {hand_total(user_cards, user_ace_count)}", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
-        user_score_text = blackjack_canvas.create_text(100, 500, text = f"Score:    {scores[0]}", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
+        blackjack_canvas.create_rectangle(2.5,85,260,640, outline = "white",  width = 5)
+        user_hand_text = blackjack_canvas.create_text(10, 120, text = display_cards_in_hand(user_cards), fill = "white", font = "Helvetica 15 bold", anchor = "nw")
+        user_total_text = blackjack_canvas.create_text(10, 450, text = f"Max Non-Bust Total:    {hand_total(user_cards, user_ace_count)}", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
+        user_score_text = blackjack_canvas.create_text(10, 500, text = f"Score:    {scores[0]}", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
 
+        blackjack_canvas.create_rectangle(260,85,560,640, outline = "white",  width = 5)
+        comp_hand_text = blackjack_canvas.create_text(270, 120, text = "Cards in Hand:\nHidden\nHidden", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
+        comp_total_text = blackjack_canvas.create_text(270, 450, text = f"Max Non-Bust Total:    Hidden", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
+        comp_score_text = blackjack_canvas.create_text(270, 500, text = f"Score:    {scores[0]}", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
 
-        comp_hand_text = blackjack_canvas.create_text(600, 120, text = "Cards in Hand:\nHidden\nHidden", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
-        comp_total_text = blackjack_canvas.create_text(600, 450, text = f"Max Non-Bust Total:    Hidden", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
-        comp_score_text = blackjack_canvas.create_text(600, 500, text = f"Score:    {scores[0]}", fill = "white", font = "Helvetica 15 bold", anchor = "nw")
-
-        win_display_text = blackjack_canvas.create_text(500, 600, text = "", fill = "white", font = "Helvetica 25 bold", anchor = "n")
+        win_display_text = blackjack_canvas.create_text(280, 700, text = "", fill = "white", font = "Helvetica 40 bold", anchor = "s")
 
         start_button.destroy()
 
-    start_button = tk.Button(root, text = "Start")
+    start_button = tk.Button(blackjack_canvas, text = "Start",  bg = "white", fg = "black", borderwidth= 0, font = "Helvetica 40 bold")
     start_button["command"] = lambda : start_button_func()
-    start_button.pack()    
+    start_button.place(x = 10, y = 351, anchor = "w")    
 
     # Function that instructs the hit button to hit and update cards in hand
     def hit_button_func():
@@ -213,9 +214,9 @@ def main():
             
     def create_hit_button():
         global hit_button
-        hit_button = tk.Button(root, text = "Hit")
+        hit_button = tk.Button(blackjack_canvas, text = "Hit",  bg = "white", fg = "black", borderwidth= 0, font = "Helvetica 25 bold")
         hit_button["command"] = lambda : hit_button_func()
-        hit_button.pack()
+        hit_button.place(x = 80 , y = 600, anchor= "e")
 
     # Function that controls what the stand button does
     def stand_button_func():
@@ -233,9 +234,9 @@ def main():
     
     def create_stand_button():
         global stand_button
-        stand_button = tk.Button(root, text = "Stand")
+        stand_button = tk.Button(blackjack_canvas, text = "Stand",  bg = "white", fg = "black", borderwidth= 0, font = "Helvetica 25 bold")
         stand_button["command"] = lambda : stand_button_func()
-        stand_button.pack()
+        stand_button.place(x = 80, y = 600, anchor = "w")
 
     # Function that controls the again button does
     def again_button_func():
@@ -255,9 +256,9 @@ def main():
 
     def create_again_button():
         global again_button
-        again_button = tk.Button(root, text = "Again")
+        again_button = tk.Button(blackjack_canvas, text = "Again",  bg = "white", fg = "black", borderwidth= 0, font = "Helvetica 25 bold")
         again_button["command"] = lambda : again_button_func()
-        again_button.pack()
+        again_button.place(x = 80, y = 600, anchor = "c")
 
     # Function that controls what the reset button does and resets the "board"
     def restart_button_func():
@@ -276,9 +277,9 @@ def main():
 
     def create_restart_button():
         global restart_button
-        restart_button = tk.Button(root, text = "Restart")
+        restart_button = tk.Button(blackjack_canvas, text = "Restart",  bg = "white", fg = "black", borderwidth= 0, font = "Helvetica 25 bold")
         restart_button["command"] = lambda : restart_button_func()
-        restart_button.pack()
+        restart_button.place(x = 270, y = 600, anchor = "w")
 
     
     blackjack_canvas.pack()
